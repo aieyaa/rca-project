@@ -9,7 +9,7 @@
     "backend_imports": true,
     "db_connection": true,
     "api_query_works": true,
-    "frontend_api_call": false,
+    "frontend_api_call": true,
     "cors_works": true,
     "frontend_deps": false,
     "cache_consistent": true,
