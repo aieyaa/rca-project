@@ -3,6 +3,7 @@ from collections import deque
 from datetime import datetime, timezone
 
 from flask import Flask, jsonify, request, g
+from flask_cors import CORS
 import psycopg2
 import psycopg2.extras
 import redis
@@ -11,8 +12,10 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
+# DATABASE_URL = os.environ.get("DATABASE_URL", "postgres://taskuser:taskpass@database:5432/taskdb")
+# REDIS_URL = os.environ["REDIS_URL"]
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgres://taskuser:taskpass@db:5432/taskdb")
-REDIS_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
+REDIS_URL = os.environ.get("REDIS_URL", "redis://redis:6379")
 
 search_history = deque(maxlen=100)
 
@@ -152,6 +155,8 @@ def search_tasks():
     cur.execute("SELECT * FROM tasks WHERE title ILIKE %s OR description ILIKE %s", (f"%{q}%", f"%{q}%"))
     results = cur.fetchall()
     search_history.append({"query": q, "results_count": len(results), "timestamp": datetime.now().isoformat()})
+    if len(search_history) > 100:
+        search_history.pop(0)
     serialized = []
     for t in results:
         serialized.append({
@@ -183,7 +188,6 @@ def warmup_cache():
     except Exception as e:
         print(f"Cache warmup failed (non-critical): {e}")
 
-warmup_cache()
-
+# warmup_cache() removed to fix startup deadlock
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
