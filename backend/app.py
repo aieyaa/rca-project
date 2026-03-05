@@ -6,8 +6,8 @@ from flask import Flask, jsonify, request, g
 from flask_cors import CORS
 import psycopg2
 import psycopg2.extras
+import psycopg2.errors
 import redis
-from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
@@ -100,10 +100,14 @@ def create_task():
         return jsonify({"error": "Title is required"}), 400
     db = get_db()
     cur = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute(
-        "INSERT INTO tasks (title, description, is_active, created_at, updated_at) VALUES (%s, %s, %s, %s, %s) RETURNING *",
-        (data["title"], data.get("description", ""), True, datetime.now(timezone.utc), datetime.now(timezone.utc))
-    )
+    try:
+        cur.execute(
+            "INSERT INTO tasks (title, description, is_active, created_at, updated_at) VALUES (%s, %s, %s, %s, %s) RETURNING *",
+            (data["title"], data.get("description", ""), True, datetime.now(timezone.utc), datetime.now(timezone.utc))
+        )
+    except psycopg2.errors.UniqueViolation:
+        db.rollback()
+        return jsonify({"error": "A task with this title already exists"}), 409
     task = cur.fetchone()
     r = get_redis()
     r.delete("stats")
