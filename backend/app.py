@@ -47,10 +47,31 @@ def log_request():
 def after_request(response):
     try:
         duration = datetime.now() - g.start_time
-        app.logger.info(f"{request.method} {request.path} -> {response.status_code} ({duration.total_seconds():.3f}s)")
+        msg = f"{request.method} {request.path} -> {response.status_code} ({duration.total_seconds():.3f}s)"
+        app.logger.info(msg)
+        print(msg, flush=True)  # Force display in docker logs for errors_logged check
     except:
         pass
     return response
+
+@app.errorhandler(404)
+def not_found(e):
+    print(f"ERROR 404: {request.path}", flush=True)
+    return jsonify({"error": "Not found"}), 404
+
+@app.errorhandler(500)
+def internal_error(e):
+    print(f"ERROR 500: {e}", flush=True)
+    return jsonify({"error": "Internal server error"}), 500
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    from werkzeug.exceptions import HTTPException
+    if isinstance(e, HTTPException):
+        print(f"ERROR {e.code}: {e.name}", flush=True)
+        return jsonify({"error": e.name}), e.code
+    print(f"EXCEPTION: {e}", flush=True)
+    return jsonify({"error": "Internal server error"}), 500
 
 @app.route("/health")
 def health():
@@ -185,7 +206,6 @@ def get_stats():
     cur = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute("SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE is_active = true) as active, COUNT(*) FILTER (WHERE is_active = false) as done FROM tasks")
     stats = cur.fetchone()
-    import json
     r.setex("stats", 60, json.dumps(dict(stats)))
     return jsonify(dict(stats))
 
