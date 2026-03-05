@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-05T15:12:53.336668+00:00",
+  "generated_at": "2026-03-05T13:34:37.064835+00:00",
   "checks": {
     "backend_builds": true,
     "frontend_builds": true,
@@ -12,8 +12,8 @@
     "frontend_api_call": true,
     "cors_works": true,
     "frontend_deps": false,
-    "cache_consistent": false,
-    "no_duplicates": true,
+    "cache_consistent": true,
+    "no_duplicates": false,
     "no_memory_leak": true,
     "db_ready_check": true,
     "errors_logged": false,
