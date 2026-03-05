@@ -25,8 +25,13 @@ services:
     ports:
       - "8000:8000"
     environment:
-    # DATABASE_URL: "postgres://taskuser:taskpass@database:5432/taskdb"
+# <<<<<<< HEAD
+#     # DATABASE_URL: "postgres://taskuser:taskpass@database:5432/taskdb"
+#       DATABASE_URL: "postgres://taskuser:taskpass@db:5432/taskdb"
+# =======
       DATABASE_URL: "postgres://taskuser:taskpass@db:5432/taskdb"
+      REDIS_URL: "redis://redis:6379/0"
+# >>>>>>> 60ea28972a4456c730605a72eb8f5c420e2c0f72
     depends_on:
       - db
       - redis
@@ -36,7 +41,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "3000:80"
+      - "3000:8080"
     depends_on:
       - backend
     volumes:
